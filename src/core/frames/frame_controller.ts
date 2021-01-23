@@ -1,4 +1,4 @@
-import { FrameElement, FrameElementDelegate, FrameLoadingStyle } from "../../elements/frame_element"
+import { FrameElement, FrameElementDelegate, FrameLoadingStyle, isTurboFrameElement } from "../../elements/frame_element"
 import { FetchMethod, FetchRequest, FetchRequestDelegate } from "../../http/fetch_request"
 import { FetchResponse } from "../../http/fetch_response"
 import { AppearanceObserver, AppearanceObserverDelegate } from "../../observers/appearance_observer"
@@ -197,17 +197,17 @@ export class FrameController implements AppearanceObserverDelegate, FetchRequest
     let element
     const id = CSS.escape(this.id)
 
-    if (element = activateElement(container.querySelector(`turbo-frame#${id}`))) {
+    if (element = activateElement(container.querySelector(`${this.element.selector}#${id}`))) {
       return element
     }
 
-    if (element = activateElement(container.querySelector(`turbo-frame[src][recurse~=${id}]`))) {
+    if (element = activateElement(container.querySelector(`${this.element.selector}[src][recurse~=${id}]`))) {
       await element.loaded
       return await this.extractForeignFrameElement(element)
     }
 
-    console.error(`Response has no matching <turbo-frame id="${id}"> element`)
-    return new FrameElement()
+    console.error(`Response has no element matching ${this.element.selector}#${id}`)
+    return new this.elementConstructor()
   }
 
   private loadFrameElement(frameElement: FrameElement) {
@@ -261,6 +261,10 @@ export class FrameController implements AppearanceObserverDelegate, FetchRequest
     return true
   }
 
+  private get elementConstructor() {
+    return Object.getPrototypeOf(this.element).constructor
+  }
+
   // Computed properties
 
   get firstAutofocusableElement(): HTMLElement | null {
@@ -296,7 +300,7 @@ export class FrameController implements AppearanceObserverDelegate, FetchRequest
 function getFrameElementById(id: string | null) {
   if (id != null) {
     const element = document.getElementById(id)
-    if (element instanceof FrameElement) {
+    if (isTurboFrameElement(element)) {
       return element
     }
   }
@@ -322,7 +326,7 @@ function activateElement(element: Node | null) {
     element = document.importNode(element, true)
   }
 
-  if (element instanceof FrameElement) {
+  if (isTurboFrameElement(element)) {
     return element
   }
 }

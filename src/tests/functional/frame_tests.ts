@@ -10,6 +10,17 @@ export class FrameTests extends FunctionalTestCase {
     await this.nextBeat
     this.assert.notOk(await this.innerHTMLForSelector("#missing"))
   }
+
+  async "test loading a tbody element"() {
+    await this.clickSelector("#tbody0 a")
+    await this.nextBeat
+
+    const contentsTd = await this.querySelector("#tbody0 td")
+    this.assert.equal(await contentsTd.getVisibleText(), "Table service")
+
+    const contentsTh = await this.querySelector("#thead0 th")
+    this.assert.equal(await contentsTh.getVisibleText(), "table thead0")
+  }
 }
 
 FrameTests.registerSuite()
